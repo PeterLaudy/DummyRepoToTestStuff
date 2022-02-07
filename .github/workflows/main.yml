@@ -1,4 +1,4 @@
-name: Run unit tests
+name: Update the repository from the build script.
 
 on:
 #  push:
