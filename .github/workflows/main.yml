@@ -1,0 +1,28 @@
+name: Run unit tests
+
+on:
+  push:
+    branches: [ main ]
+
+  workflow_dispatch:
+    branches: [ main ]
+
+jobs:
+  build:
+  
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check-out our repository under $GITHUB_WORKSPACE, so our job can access it
+        uses: actions/checkout@v2
+        
+      - name: Run unit tests
+        run: |
+          if [[ $(git log -n 1 | grep "github-actions <github-actions@github.com>") != Author* ]]
+          then
+            date >> updated/generated.txt
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git commit -a -m "generated"
+            git push
+          fi
