@@ -1,8 +1,8 @@
 name: Run unit tests
 
 on:
-  push:
-    branches: [ main ]
+#  push:
+#    branches: [ main ]
 
   workflow_dispatch:
     branches: [ main ]
@@ -18,7 +18,7 @@ jobs:
 
       # If you use this, you need to pull the remote repository after each build,
       # which basically means after each push.
-      - name: Change a file and push it to the repository.
+      - name: Change a file and push it to the repository. This will not trigger a new build if this workflow triggers on push.
         run: |
           date >> updated/generated.txt
           git config user.name github-actions
