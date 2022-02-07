@@ -9,14 +9,16 @@ on:
 
 jobs:
   build:
-  
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Check-out our repository under $GITHUB_WORKSPACE, so our job can access it
         uses: actions/checkout@v2
-        
-      - name: Run unit tests
+
+      # If you use this, you need to pull the remote repository after each build,
+      # which basically means after each push.
+      - name: Change a file and push itto the repository.
         run: |
           date >> updated/generated.txt
           git config user.name github-actions
