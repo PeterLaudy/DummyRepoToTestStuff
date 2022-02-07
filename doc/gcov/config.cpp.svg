@@ -1,0 +1,276 @@
+<svg fill="none" viewBox="0 0 1000 4068px" width="1000" height="4068px" xmlns="http://www.w3.org/2000/svg">n<foreignObject width="100%" height="100%">
+<div xmlns="http://www.w3.org/1999/xhtml">
+<style >/*!
+  Theme: Colors
+  Author: mrmrs (http://clrs.cc)
+  License: ~ MIT (or more permissive) [via base16-schemes-source]
+  Maintainer: @highlightjs/core-team
+  Version: 2021.09.0
+*/pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs{color:#bbb;background:#111}.hljs ::selection,.hljs::selection{background-color:#555;color:#bbb}.hljs-comment{color:#777}.hljs-tag{color:#999}.hljs-operator,.hljs-punctuation,.hljs-subst{color:#bbb}.hljs-operator{opacity:.7}.hljs-bullet,.hljs-deletion,.hljs-name,.hljs-selector-tag,.hljs-template-variable,.hljs-variable{color:#ff4136}.hljs-attr,.hljs-link,.hljs-literal,.hljs-number,.hljs-symbol,.hljs-variable.constant_{color:#ff851b}.hljs-class .hljs-title,.hljs-title,.hljs-title.class_{color:#ffdc00}.hljs-strong{font-weight:700;color:#ffdc00}.hljs-addition,.hljs-code,.hljs-string,.hljs-title.class_.inherited__{color:#2ecc40}.hljs-built_in,.hljs-doctag,.hljs-keyword.hljs-atrule,.hljs-quote,.hljs-regexp{color:#7fdbff}.hljs-attribute,.hljs-function .hljs-title,.hljs-section,.hljs-title.function_,.ruby .hljs-property{color:#0074d9}.diff .hljs-meta,.hljs-keyword,.hljs-template-tag,.hljs-type{color:#b10dc9}.hljs-emphasis{color:#b10dc9;font-style:italic}.hljs-meta,.hljs-meta .hljs-keyword,.hljs-meta .hljs-string{color:#85144b}.hljs-meta .hljs-keyword,.hljs-meta-keyword{font-weight:700}
+.uncovered{background-color:#400000;display:inline-block;width:100%;}pre{margin:0;padding:0}
+</style>
+<pre id="code" class="hljs"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;config.h&quot;</span></span>
+
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;cstring&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iomanip&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span>
+
+<span class="hljs-keyword">namespace</span> pico_cnc {
+
+    <span class="hljs-comment">/**
+     * Implementation of the TimerConfig class.
+     */</span>
+    TimerConfig::<span class="hljs-built_in">TimerConfig</span>(timerType_t typeTimer, <span class="hljs-type">int</span> index, axisMask_t mask) {
+        typeOfTimer = typeTimer;
+        timerIndex = index;
+        axisMask = mask;
+    }
+
+    <span class="hljs-function">TimerConfig* <span class="hljs-title">TimerConfig::factory</span><span class="hljs-params">(timerType_t typeTimer, <span class="hljs-type">int</span> index, axisMask_t mask)</span> </span>{
+
+        TimerConfig *result = <span class="hljs-literal">NULL</span>;
+        <span class="hljs-keyword">switch</span>  (typeTimer) {
+            <span class="hljs-keyword">case</span> accTimerType:
+            <span class="hljs-keyword">case</span> singleSpeedTimerType:
+                result = <span class="hljs-keyword">new</span> <span class="hljs-built_in">TimerConfig</span>(typeTimer, index, mask);
+        }
+
+        <span class="hljs-keyword">return</span> result;
+    }
+
+    <span class="hljs-comment">/**
+     * Implementation of the StepperConfig class.
+     */</span>
+    StepperConfig::<span class="hljs-built_in">StepperConfig</span>(axisType_t typeAxis, <span class="hljs-type">int</span> index, stepper_config &amp;cfg) : <span class="hljs-built_in">axisConfig</span>(cfg) {
+        typeOfAxis = typeAxis;
+        axisIndex = index;
+    }
+
+    <span class="hljs-function">StepperConfig* <span class="hljs-title">StepperConfig::factory</span><span class="hljs-params">(axisType_t typeAxis, <span class="hljs-type">int</span> axisIndex, stepper_config &amp;cfg)</span> </span>{
+
+        StepperConfig *result;
+        <span class="hljs-keyword">switch</span> (typeAxis)
+        {
+            <span class="hljs-keyword">case</span> linearAxisType:
+                result = <span class="hljs-keyword">new</span> <span class="hljs-built_in">LinearStepperConfig</span>(typeAxis, axisIndex, cfg);
+                <span class="hljs-keyword">break</span>;
+<div class="uncovered">            <span class="hljs-keyword">case</span> circularAxisType:</div>
+<div class="uncovered">                result = <span class="hljs-keyword">new</span> <span class="hljs-built_in">CircularStepperConfig</span>(typeAxis, axisIndex, cfg);</div>
+<div class="uncovered">                <span class="hljs-keyword">break</span>;</div>
+<div class="uncovered">            <span class="hljs-keyword">default</span>:</div>
+<div class="uncovered">                result = <span class="hljs-keyword">new</span> <span class="hljs-built_in">StepperConfig</span>(typeAxis, axisIndex, cfg);</div>
+<div class="uncovered">                <span class="hljs-keyword">break</span>;</div>
+        }
+
+        <span class="hljs-keyword">return</span> result;
+    }
+
+<div class="uncovered">    <span class="hljs-type">void</span> StepperConfig::<span class="hljs-built_in">outputStepsResolution</span>(std::ostream &amp;os) <span class="hljs-type">const</span> {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> ((minAxisType &lt;= typeOfAxis) &amp;&amp; (maxAxisType &gt;= typeOfAxis)) {</div>
+<div class="uncovered">            os &lt;&lt; <span class="hljs-string">&quot;$10&quot;</span> &lt;&lt; axisIndex &lt;&lt; <span class="hljs-string">&quot;=&quot;</span> &lt;&lt; <span class="hljs-built_in">getStepsResolution</span>() &lt;&lt; std::endl;</div>
+        }
+<div class="uncovered">    }</div>
+
+<div class="uncovered">    <span class="hljs-type">void</span> StepperConfig::<span class="hljs-built_in">outputMaxSpeedPerMin</span>(std::ostream &amp;os) <span class="hljs-type">const</span> {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> ((minAxisType &lt;= typeOfAxis) &amp;&amp; (maxAxisType &gt;= typeOfAxis)) {</div>
+<div class="uncovered">            os &lt;&lt; <span class="hljs-string">&quot;$11&quot;</span> &lt;&lt; axisIndex &lt;&lt; <span class="hljs-string">&quot;=&quot;</span> &lt;&lt; <span class="hljs-built_in">getMaxSpeedPerMin</span>() &lt;&lt; std::endl;</div>
+        }
+<div class="uncovered">    }</div>
+
+<div class="uncovered">    <span class="hljs-type">void</span> StepperConfig::<span class="hljs-built_in">outputAcceleration</span>(std::ostream &amp;os) <span class="hljs-type">const</span> {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> ((minAxisType &lt;= typeOfAxis) &amp;&amp; (maxAxisType &gt;= typeOfAxis)) {</div>
+<div class="uncovered">            os &lt;&lt; <span class="hljs-string">&quot;$12&quot;</span> &lt;&lt; axisIndex &lt;&lt; <span class="hljs-string">&quot;=&quot;</span> &lt;&lt; <span class="hljs-built_in">getAcceleration</span>() &lt;&lt; std::endl;</div>
+        }
+<div class="uncovered">    }</div>
+
+<div class="uncovered">    <span class="hljs-type">void</span> StepperConfig::<span class="hljs-built_in">outputMaxTravel</span>(std::ostream &amp;os) <span class="hljs-type">const</span> {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> ((minAxisType &lt;= typeOfAxis) &amp;&amp; (maxAxisType &gt;= typeOfAxis)) {</div>
+<div class="uncovered">            os &lt;&lt; <span class="hljs-string">&quot;$13&quot;</span> &lt;&lt; axisIndex &lt;&lt; <span class="hljs-string">&quot;=&quot;</span> &lt;&lt; <span class="hljs-built_in">getMaxTravel</span>() &lt;&lt; std::endl;</div>
+        }
+<div class="uncovered">    }</div>
+
+<div class="uncovered">    <span class="hljs-type">void</span> StepperConfig::<span class="hljs-built_in">outputAxisType</span>(std::ostream &amp;os) <span class="hljs-type">const</span> {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> ((minAxisType &lt;= typeOfAxis) &amp;&amp; (maxAxisType &gt;= typeOfAxis)) {</div>
+<div class="uncovered">            os &lt;&lt; <span class="hljs-string">&quot;$9&quot;</span> &lt;&lt; axisIndex &lt;&lt; <span class="hljs-string">&quot;=&quot;</span> &lt;&lt; (<span class="hljs-type">int</span>)typeOfAxis &lt;&lt; std::endl;</div>
+        }
+<div class="uncovered">    }</div>
+
+    <span class="hljs-comment">/**
+     * Implementation of the Config class.
+     */</span>
+<div class="uncovered">    Config::<span class="hljs-built_in">Config</span>(<span class="hljs-type">const</span> Config&amp; cfg) {</div>
+<div class="uncovered">        isGrblVersion = cfg.isGrblVersion;</div>
+<div class="uncovered">        configIndex = cfg.configIndex;</div>
+<div class="uncovered">        rawSteppersConfig = cfg.rawSteppersConfig;</div>
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS; i++) {</div>
+<div class="uncovered">            timerConfigs[i] = cfg.timerConfigs[i];</div>
+        }
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS; i++) {</div>
+<div class="uncovered">            axisConfigs[i] = cfg.axisConfigs[i];</div>
+        }
+<div class="uncovered">    }</div>
+
+    Config::<span class="hljs-built_in">Config</span>(rawConfig&amp; cfg, <span class="hljs-type">int</span> index) {
+        isGrblVersion = <span class="hljs-literal">false</span>;
+        rawSteppersConfig = <span class="hljs-keyword">new</span> <span class="hljs-built_in">rawConfig</span>(cfg);
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS; i++) {
+            timerConfigs[i] = TimerConfig::<span class="hljs-built_in">factory</span>(rawSteppersConfig-&gt;timerTypes[i], i, cfg.timerAxis[i]);
+        }
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS; i++) {
+            axisConfigs[i] = StepperConfig::<span class="hljs-built_in">factory</span>(rawSteppersConfig-&gt;axisTypes[i], i, rawSteppersConfig-&gt;steppers[i]);
+        }
+
+        configIndex = index;
+    }
+
+<div class="uncovered">    <span class="hljs-type">void</span> Config::<span class="hljs-built_in">copyFrom</span>(<span class="hljs-type">const</span> Config&amp; source) {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> (<span class="hljs-literal">NULL</span> != grblVersionOfConfig) {</div>
+<div class="uncovered">            <span class="hljs-keyword">delete</span> grblVersionOfConfig;</div>
+<div class="uncovered">            grblVersionOfConfig = <span class="hljs-literal">NULL</span>;</div>
+        }
+
+<div class="uncovered">        <span class="hljs-built_in">memcpy</span>(rawSteppersConfig, source.rawSteppersConfig, <span class="hljs-built_in">sizeof</span>(rawConfig));</div>
+
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS; i++) {</div>
+<div class="uncovered">            <span class="hljs-keyword">delete</span> timerConfigs[i];</div>
+<div class="uncovered">            timerConfigs[i] = TimerConfig::<span class="hljs-built_in">factory</span>(rawSteppersConfig-&gt;timerTypes[i], i, source.timerConfigs[i]-&gt;<span class="hljs-built_in">getAxisMask</span>());</div>
+        }
+
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS; i++) {</div>
+<div class="uncovered">            <span class="hljs-keyword">delete</span> axisConfigs[i];</div>
+<div class="uncovered">            axisConfigs[i] = StepperConfig::<span class="hljs-built_in">factory</span>(rawSteppersConfig-&gt;axisTypes[i], i, rawSteppersConfig-&gt;steppers[i]);</div>
+        }
+<div class="uncovered">    }</div>
+
+    <span class="hljs-comment">/** Get a GRBL compatible copy of the class instance.
+     *  Get a copy of the class instance which for now is only used to
+     *  create a GRBL compatible output of the configuration parameters.
+     *  This only makes sense if the configuration has only three linear
+     *  axis.
+     */</span>
+<div class="uncovered">    Config&amp; Config::<span class="hljs-built_in">asGrbl</span>() {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> (isGrblVersion) {</div>
+<div class="uncovered">            <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;</div>
+        }
+
+        <span class="hljs-comment">// For GRBL, the first three axes must be linear axes.</span>
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">3</span>; i++) {</div>
+<div class="uncovered">            <span class="hljs-keyword">if</span> (axisConfigs[i]-&gt;typeOfAxis != linearAxisType) {</div>
+<div class="uncovered">                <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;</div>
+            }
+        }
+
+        <span class="hljs-comment">// For GRBL, all other axes must be unused.</span>
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">3</span>; i &lt; MAX_AXIS; i++) {</div>
+<div class="uncovered">            <span class="hljs-keyword">if</span> (axisConfigs[i]-&gt;typeOfAxis != unusedAxisType) {</div>
+<div class="uncovered">                <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;</div>
+            }
+        }
+
+<div class="uncovered">        <span class="hljs-keyword">if</span> (<span class="hljs-literal">NULL</span> == grblVersionOfConfig) {</div>
+<div class="uncovered">            grblVersionOfConfig = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Config</span>(*<span class="hljs-keyword">this</span>);</div>
+<div class="uncovered">            grblVersionOfConfig-&gt;isGrblVersion = <span class="hljs-literal">true</span>;</div>
+        }
+
+<div class="uncovered">        <span class="hljs-keyword">return</span> *grblVersionOfConfig;</div>
+    }
+
+<div class="uncovered">    <span class="hljs-type">void</span> Config::<span class="hljs-built_in">setAxisType</span>(<span class="hljs-type">int</span> axisIndex, axisType_t typeOfAxis) {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> ((<span class="hljs-number">0</span> &lt;= axisIndex) &amp;&amp; (MAX_AXIS &gt; axisIndex))  {</div>
+<div class="uncovered">            <span class="hljs-keyword">if</span> (((minAxisType &lt;= typeOfAxis) &amp;&amp; (maxAxisType &gt;= typeOfAxis)) || (typeOfAxis == unusedAxisType)) {</div>
+<div class="uncovered">                rawSteppersConfig-&gt;axisTypes[axisIndex] = typeOfAxis;</div>
+<div class="uncovered">                <span class="hljs-keyword">auto</span> axis = axisConfigs[axisIndex];</div>
+<div class="uncovered">                <span class="hljs-keyword">auto</span> &amp;cfg = axis-&gt;axisConfig;</div>
+<div class="uncovered">                <span class="hljs-keyword">delete</span> axis;</div>
+<div class="uncovered">                axisConfigs[axisIndex] = StepperConfig::<span class="hljs-built_in">factory</span>(typeOfAxis, axisIndex, cfg);</div>
+            }
+        }
+<div class="uncovered">    }</div>
+
+<div class="uncovered">    <span class="hljs-type">void</span> Config::<span class="hljs-built_in">setTimer</span>(<span class="hljs-type">int</span> timerIndex, timerType_t typeOfTimer, axisMask_t mask) {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> ((<span class="hljs-number">0</span> &lt;= timerIndex) &amp;&amp; (MAX_AXIS &gt; timerIndex))  {</div>
+<div class="uncovered">            <span class="hljs-keyword">if</span> (((minTimerType &lt;= typeOfTimer) &amp;&amp; (maxTimerType &gt;= typeOfTimer)) || (typeOfTimer == unusedTimerType)) {</div>
+<div class="uncovered">                rawSteppersConfig-&gt;timerTypes[timerIndex] = typeOfTimer;</div>
+<div class="uncovered">                <span class="hljs-keyword">auto</span> timer = timerConfigs[timerIndex];</div>
+<div class="uncovered">                <span class="hljs-keyword">delete</span> timer;</div>
+<div class="uncovered">                timerConfigs[timerIndex] = TimerConfig::<span class="hljs-built_in">factory</span>(typeOfTimer, timerIndex, mask);</div>
+            }
+        }
+<div class="uncovered">    }</div>
+
+<div class="uncovered">    <span class="hljs-type">void</span> Config::<span class="hljs-built_in">copyAxis</span>(<span class="hljs-type">int</span> source, <span class="hljs-type">const</span> rawConfig &amp;rc, <span class="hljs-type">int</span> dest) {</div>
+<div class="uncovered">        <span class="hljs-keyword">if</span> ((<span class="hljs-number">0</span> &lt;= source) &amp;&amp; (MAX_AXIS &gt; source) &amp;&amp; (<span class="hljs-number">0</span> &lt;= dest) &amp;&amp; (MAX_AXIS &gt; dest)) {</div>
+<div class="uncovered">            <span class="hljs-keyword">if</span> (<span class="hljs-literal">NULL</span> != grblVersionOfConfig) {</div>
+<div class="uncovered">                <span class="hljs-keyword">delete</span> grblVersionOfConfig;</div>
+<div class="uncovered">                grblVersionOfConfig = <span class="hljs-literal">NULL</span>;</div>
+            }
+
+<div class="uncovered">            rawSteppersConfig-&gt;axisTypes[dest] = rc.axisTypes[source];</div>
+<div class="uncovered">            <span class="hljs-built_in">memcpy</span>(&amp;(rawSteppersConfig-&gt;steppers[dest]), &amp;(rc.steppers[source]), <span class="hljs-built_in">sizeof</span>(stepper_config));</div>
+
+<div class="uncovered">            <span class="hljs-keyword">delete</span> axisConfigs[dest];</div>
+<div class="uncovered">            axisConfigs[dest] = StepperConfig::<span class="hljs-built_in">factory</span>(rawSteppersConfig-&gt;axisTypes[dest], dest, rawSteppersConfig-&gt;steppers[dest]);</div>
+        }
+<div class="uncovered">    }</div>
+
+<div class="uncovered">    StepperConfig&amp; Config::<span class="hljs-built_in">getAxisConfig</span>(<span class="hljs-type">int</span> index) <span class="hljs-type">const</span> {</div>
+<div class="uncovered">        <span class="hljs-keyword">return</span> *axisConfigs[index];</div>
+    }
+
+<div class="uncovered">    std::ostream&amp; <span class="hljs-keyword">operator</span>&lt;&lt;(std::ostream &amp;os, <span class="hljs-type">const</span> Config &amp;cfg) {</div>
+<div class="uncovered">        os &lt;&lt; std::fixed &lt;&lt; std::<span class="hljs-built_in">setprecision</span>(<span class="hljs-number">3</span>);</div>
+
+<div class="uncovered">        <span class="hljs-keyword">if</span> (!cfg.isGrblVersion) {</div>
+<div class="uncovered">            os &lt;&lt; <span class="hljs-string">&quot;$CFG=&quot;</span> &lt;&lt; cfg.configIndex &lt;&lt; std::endl;</div>
+        }
+
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$0=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getStepPulse</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$1=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getStepIdleDelay</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$2=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getStepPortInvert</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$3=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getDirPortInvert</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$4=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getStepEnableInvert</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$5=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getLimitPinsInvert</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$6=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getProbePinInvert</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$10=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getStatusReport</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$11=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getJunctionDeviation</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$12=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getArcTolerance</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$13=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getReportInches</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$20=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getSoftLimits</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$21=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getHardLimits</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$22=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getHomingCycle</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$23=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getHomingDirInvert</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$24=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getHomingFeed</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$25=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getHomingSeek</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$26=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getHomingDebounce</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$27=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getHomingPullOff</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$30=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getMaxSpindleSpeed</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$31=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getMinSpindleSpeed</span>() &lt;&lt; std::endl;</div>
+<div class="uncovered">        os &lt;&lt; <span class="hljs-string">&quot;$32=&quot;</span> &lt;&lt; cfg.<span class="hljs-built_in">getLaserMode</span>() &lt;&lt; std::endl;</div>
+
+<div class="uncovered">        <span class="hljs-keyword">if</span> (!cfg.isGrblVersion) {</div>
+<div class="uncovered">            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS ; i++) {</div>
+<div class="uncovered">                cfg.axisConfigs[i]-&gt;<span class="hljs-built_in">outputAxisType</span>(os);</div>
+            }
+        }
+
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS ; i++) {</div>
+<div class="uncovered">            cfg.axisConfigs[i]-&gt;<span class="hljs-built_in">outputStepsResolution</span>(os);</div>
+        }
+
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS ; i++) {</div>
+<div class="uncovered">            cfg.axisConfigs[i]-&gt;<span class="hljs-built_in">outputMaxSpeedPerMin</span>(os);</div>
+        }
+
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS ; i++) {</div>
+<div class="uncovered">            cfg.axisConfigs[i]-&gt;<span class="hljs-built_in">outputAcceleration</span>(os);</div>
+        }
+
+<div class="uncovered">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> i = <span class="hljs-number">0</span>; i &lt; MAX_AXIS ; i++) {</div>
+<div class="uncovered">            cfg.axisConfigs[i]-&gt;<span class="hljs-built_in">outputMaxTravel</span>(os);</div>
+        }
+
+<div class="uncovered">        <span class="hljs-keyword">return</span> os;</div>
+    }
+
+}
+</pre></div></foreignObject></svg>

@@ -1,0 +1,41 @@
+@startuml
+
+class Configuration {
+  * Number and type of axes
+  * Resolution, speed and acceleration
+}
+
+class StepperManager {
+  * Read Configuration
+  * Create Timer and Generator instances
+  * Receive and process move commands
+  * Interrupt handling for timers
+}
+
+abstract Timer {
+  Generate the timebase for the pulses.
+  Can be a linear acceleration or a
+  fixed speed.
+
+  Process each Move to create a smooth
+  movement of the CNC tool.
+}
+
+abstract Generator {
+  Use the RP2040 PWM slices to create
+  the actual pulses for the steppers.
+}
+
+abstract Move {
+  Information about the G-Code commands
+  received from the host.
+}
+
+Configuration "1" <- StepperManager
+StepperManager --> "1..*" Timer
+StepperManager ---> "*" Move
+StepperManager --> "1..*" Generator
+Timer --> "*" Move
+Generator --> "*" Move
+
+@enduml
