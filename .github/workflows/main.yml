@@ -17,11 +17,16 @@ jobs:
         uses: actions/checkout@v2
 
       # If you use this, you need to pull the remote repository after each build,
-      # which basically means after each push.
+      # which basically means after each push. We don't realy push, but do a dry-run here.
       - name: Change a file and push it to the repository. This will not trigger a new build if this workflow triggers on push.
         run: |
           date >> updated/generated.txt
           git config user.name github-actions
           git config user.email github-actions@github.com
           git commit -a -m "generated"
-          git push
+          git push --dry-run
+
+      - name: Run some tools to see how they are to be called and what version they currently run.
+        run: |
+          tidy --version
+          clang-tidy --version
