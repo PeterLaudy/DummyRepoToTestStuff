@@ -27,6 +27,6 @@ jobs:
           git push --dry-run
 
       - name: Run some tools to see how they are to be called and what version they currently run.
+        continue-on-error: true
         run: |
-          tidy --version
-          clang-tidy --version
+          clang-tidy --version || true
