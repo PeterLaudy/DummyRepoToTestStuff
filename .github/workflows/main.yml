@@ -29,5 +29,5 @@ jobs:
       - name: Try to install and run clang-tidy.
         continue-on-error: true
         run: |
-          sudo aptitude install clang-tidy
+          sudo apt install clang-tidy
           clang-tidy --version || true
