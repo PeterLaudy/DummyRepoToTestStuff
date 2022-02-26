@@ -26,7 +26,8 @@ jobs:
           git commit -a -m "generated"
           git push --dry-run
 
-      - name: Run some tools to see how they are to be called and what version they currently run.
+      - name: Try to install and run clang-tidy.
         continue-on-error: true
         run: |
+          sudo aptitude install clang-tidy
           clang-tidy --version || true
